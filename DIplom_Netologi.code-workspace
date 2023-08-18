@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"name": "website-of-firefighters",
+			"path": "../../Сайт/website-of-firefighters"
+		}
+	],
+  "settings": {
+    "liveServer.settings.multiRootWorkspaceName": "website-of-firefighters"
+  }
+}

@@ -44,51 +44,34 @@ dateLinks.forEach((dateLink, index) => {
 });
 // ____________________________________________
 
-// Функция для отправки запроса и получения данных
-async function fetchData(url, requestData, callback) {
-  try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: requestData,
-    });
-
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
-    }
-
-    const data = await response.json();
-    callback(data);
-  } catch (error) {
-    console.error("Error fetching data:", error);
-  }
-}
-
 // Функция для заполнения страницы данными
 function fillPageWithData(data) {
   const halls = data.halls.result;
   const films = data.films.result;
   const seances = data.seances.result;
 
-  //обновление списка залов, фильмов и сеансов
-
-  // обновление списка залов
+  // Обновление списка залов
   const hallList = document.querySelector(".page-nav");
+
   halls.forEach((hall) => {
     if (hall.hall_open === 1) {
       const hallLink = document.createElement("a");
       hallLink.classList.add("page-nav__day");
-      hallLink.href = `hall.html?hallId=${hall.hall_id}`; //ссылка на страницу зала
+      hallLink.href = `hall.html?hallId=${hall.hall_id}`;
       hallLink.textContent = hall.hall_name;
+      hallLink.dataset.hallId = hall.hall_id; // Устанавливаем значение data-атрибута
       hallList.appendChild(hallLink);
     }
   });
 
-  //обновление списка фильмов и сеансов
+  // Обновление списка фильмов и сеансов
   const movieSections = document.querySelectorAll(".movie");
   movieSections.forEach((movieSection, index) => {
+    const film = films[index];
+    const seanceData = seances.filter(
+      (seance) => seance.seance_filmid === film.film_id
+    );
+
     const movieInfo = movieSection.querySelector(".movie__info");
     const movieTitle = movieInfo.querySelector(".movie__title");
     const movieSynopsis = movieInfo.querySelector(".movie__synopsis");
@@ -97,49 +80,29 @@ function fillPageWithData(data) {
     const moviePoster = movieInfo.querySelector(".movie__poster-image");
     const seanceList = movieSection.querySelectorAll(".movie-seances__time");
 
-    const film = films[index];
-    const seanceData = seances.filter(
-      (seance) => seance.seance_filmid === film.film_id
-    );
-
     movieTitle.textContent = film.film_name;
     movieSynopsis.textContent = film.film_description;
     movieDuration.textContent = `${film.film_duration} минут`;
     movieOrigin.textContent = film.film_origin;
     moviePoster.src = film.film_poster;
-    // Фильтрация прошедших сеансов и обновление списка времен начала сеансов
+
     const currentTime = new Date().getHours() * 60 + new Date().getMinutes();
-    seanceData.forEach((seance, index) => {
-      if (seance.seance_start >= currentTime) {
-        seanceList[index].textContent = seance.seance_time;
-        seanceList[index].href = "hall.html"; // ссылка на страницу сеанса
+    const upcomingSeances = seanceData.filter(seance => seance.seance_start >= currentTime);
+    const upcomingSeanceTimes = upcomingSeances.map(seance => seance.seance_time);
+
+    seanceList.forEach((seanceElement, index) => {
+      seanceElement.textContent = upcomingSeanceTimes[index];
+      seanceElement.href = upcomingSeances[index] ? "hall.html" : "#"; // ссылка на страницу сеанса или заблокированная ссылка
+      const seanceHall = movieSection.querySelector(".movie-seances__hall");
+
+      if (upcomingSeances.length === 0) {
+        seanceHall.classList.add("hidden"); // Скрываем блок, если нет доступных сеансов
+      } else {
+        seanceHall.classList.remove("hidden"); // Показываем блок, если есть доступные сеансы
       }
     });
   });
 }
-
-const seanceTimes = document.querySelectorAll(".movie-seances__time");
-seanceTimes.forEach(seanceTime => {
-  seanceTime.addEventListener("click", async function(event) {
-    event.preventDefault();
-
-    const selectedSeanceTime = this.textContent;
-    const selectedHallElement = this.closest(".movie-seances__hall");
-    const selectedHallName = selectedHallElement.querySelector(".movie-seances__hall-title").textContent;
-
-    // Запрос на получение актуальных данных о схеме зала
-    const requestDataHall = `event=get_hallConfig&timestamp=${selectedSeanceTime}&hallId=${selectedHallName}`;
-
-    // URL для запроса
-    const apiUrlHall = "https://jscp-diplom.netoserver.ru/";
-
-    try {
-      // ... остальной код остается без изменений ...
-    } catch (error) {
-      console.error("Error fetching hall config:", error);
-    }
-  });
-});
 
 // Параметры для запроса
 const requestData = "event=update";
@@ -147,5 +110,16 @@ const requestData = "event=update";
 // URL для запроса
 const apiUrl = "https://jscp-diplom.netoserver.ru/"; 
 
+import fetchData from './scripts.js';
+
 // Вызов функции отправки запроса и заполнения страницы данными
 fetchData(apiUrl, requestData, fillPageWithData);
+
+
+
+
+
+
+
+
+

@@ -442,6 +442,11 @@ body {
   background-color: #888888;
   pointer-events: none
  }
+
+ .hidden {
+  display: none;
+}
+
 @media (min-width: 200px) and (max-width: 999px) {
   .movie .movie__info {
   flex-direction: column;
