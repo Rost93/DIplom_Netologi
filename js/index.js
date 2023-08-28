@@ -1,4 +1,5 @@
 "use strict";
+import fetchData from './createRequest.js';
 // Изменение даты 
 const daysOfWeek = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
 const months = [
@@ -43,24 +44,19 @@ dateLinks.forEach((dateLink, index) => {
   });
 });
 // ____________________________________________
-
 // Функция для заполнения страницы данными
 function fillPageWithData(data) {
-  const halls = data.halls.result;
+  console.log(data);
+  const halls = data.halls.result.filter((item) => item.hall_open !== "0");
   const films = data.films.result;
   const seances = data.seances.result;
 
-  // Обновление списка залов
-  const hallList = document.querySelector(".page-nav");
-
+  const hallTitle = document.querySelector(".movie-seances__hall-title");
   halls.forEach((hall) => {
     if (hall.hall_open === 1) {
-      const hallLink = document.createElement("a");
-      hallLink.classList.add("page-nav__day");
-      hallLink.href = `hall.html?hallId=${hall.hall_id}`;
-      hallLink.textContent = hall.hall_name;
-      hallLink.dataset.hallId = hall.hall_id; // Устанавливаем значение data-атрибута
-      hallList.appendChild(hallLink);
+      const hallName = document.createElement("span");
+      hallName.textContent = hall.hall_name;
+      hallTitle.appendChild(hallName); // Добавляем название зала в элемент с классом "movie-seances__hall-title"
     }
   });
 
@@ -90,15 +86,34 @@ function fillPageWithData(data) {
     const upcomingSeances = seanceData.filter(seance => seance.seance_start >= currentTime);
     const upcomingSeanceTimes = upcomingSeances.map(seance => seance.seance_time);
 
+    // Обработчик клика на ссылку сеанса
     seanceList.forEach((seanceElement, index) => {
-      seanceElement.textContent = upcomingSeanceTimes[index];
-      seanceElement.href = upcomingSeances[index] ? "hall.html" : "#"; // ссылка на страницу сеанса или заблокированная ссылка
-      const seanceHall = movieSection.querySelector(".movie-seances__hall");
+      const session = upcomingSeances[index];
+      if (session) {
+        seanceElement.textContent = session.seance_time;
 
-      if (upcomingSeances.length === 0) {
-        seanceHall.classList.add("hidden"); // Скрываем блок, если нет доступных сеансов
+        if (session.isPast) {
+          // Если сеанс уже прошел, блокируем ссылку
+          seanceElement.href = "#";
+          seanceElement.style.backgroundColor = '#f2f2f2'; // Светло-серый фон
+        } else {
+          // Устанавливаем data-атрибуты для сеанса
+          seanceElement.dataset.seanceId = session.seance_id;
+          seanceElement.dataset.hallId = session.hall_id;
+
+          seanceElement.addEventListener("click", () => {
+            // Сохраняем данные о сеансе в sessionStorage
+            const sessionData = {
+              seanceId: session.seance_id,
+              hallId: session.hall_id,
+            };
+            sessionStorage.setItem("selectedSession", JSON.stringify(sessionData));
+          });
+
+          seanceElement.href = `hall.html`; // Переход на страницу зала
+        }
       } else {
-        seanceHall.classList.remove("hidden"); // Показываем блок, если есть доступные сеансы
+        seanceElement.style.display = "none";
       }
     });
   });
@@ -108,18 +123,7 @@ function fillPageWithData(data) {
 const requestData = "event=update";
 
 // URL для запроса
-const apiUrl = "https://jscp-diplom.netoserver.ru/"; 
-
-import fetchData from './scripts.js';
+const apiUrl = "https://jscp-diplom.netoserver.ru/";
 
 // Вызов функции отправки запроса и заполнения страницы данными
 fetchData(apiUrl, requestData, fillPageWithData);
-
-
-
-
-
-
-
-
-
