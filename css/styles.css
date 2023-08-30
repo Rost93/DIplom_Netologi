@@ -453,3 +453,10 @@ body {
   align-items: center;
   }
 }
+
+.movie-seances__time .past-seance {
+  color: #999; /* Цвет текста для неактивного сеанса */
+  font-weight: normal; /* Неактивный сеанс может быть менее выделенным */
+  background-color: gray; /* Фон для неактивного сеанса */
+  cursor: default; /* Изменение курсора для неактивного сеанса */
+}

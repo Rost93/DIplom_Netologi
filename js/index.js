@@ -44,86 +44,158 @@ dateLinks.forEach((dateLink, index) => {
   });
 });
 // ____________________________________________
-// Функция для заполнения страницы данными
-function fillPageWithData(data) {
-  console.log(data);
-  const halls = data.halls.result.filter((item) => item.hall_open !== "0");
-  const films = data.films.result;
-  const seances = data.seances.result;
+function createMovieSection(film, seanceData, halls) {
+  const movieSection = document.createElement("section");
+  movieSection.classList.add("movie");
 
-  const hallTitle = document.querySelector(".movie-seances__hall-title");
-  halls.forEach((hall) => {
-    if (hall.hall_open === 1) {
-      const hallName = document.createElement("span");
-      hallName.textContent = hall.hall_name;
-      hallTitle.appendChild(hallName); // Добавляем название зала в элемент с классом "movie-seances__hall-title"
-    }
+  const movieInfo = document.createElement("div");
+  movieInfo.classList.add("movie__info");
+
+  const hallsContainer = document.createElement("div");
+  hallsContainer.classList.add("movie-seances__hall");
+
+  const moviePoster = document.createElement("div");
+  moviePoster.classList.add("movie__poster");
+
+  const moviePosterImage = document.createElement("img");
+  moviePosterImage.classList.add("movie__poster-image");
+  moviePosterImage.alt = "";
+  moviePosterImage.src = film.film_poster;
+  moviePoster.appendChild(moviePosterImage);
+
+  const movieDescription = document.createElement("div");
+  movieDescription.classList.add("movie__description");
+
+  const movieTitle = document.createElement("h2");
+  movieTitle.classList.add("movie__title");
+  movieTitle.textContent = film.film_name;
+
+  const movieSynopsis = document.createElement("p");
+  movieSynopsis.classList.add("movie__synopsis");
+  movieSynopsis.textContent = film.film_description;
+
+  const movieData = document.createElement("p");
+  movieData.classList.add("movie__data");
+
+  const movieDuration = document.createElement("span");
+  movieDuration.classList.add("movie__data-duration");
+  movieDuration.textContent = film.film_duration + " минут";
+
+  const movieOrigin = document.createElement("span");
+  movieOrigin.classList.add("movie__data-origin");
+  movieOrigin.textContent = film.film_origin;
+
+  movieData.appendChild(movieDuration);
+  movieData.appendChild(movieOrigin);
+
+  movieDescription.appendChild(movieTitle);
+  movieDescription.appendChild(movieSynopsis);
+  movieDescription.appendChild(movieData);
+
+  movieInfo.appendChild(moviePoster);
+  movieInfo.appendChild(movieDescription);
+
+    // Добавляем контейнер "movie__info" в общий контейнер "movieSection"
+    movieSection.appendChild(movieInfo);
+
+  seanceData.forEach((seance) => {
+    const hall = halls.find(h => h.hall_id === seance.seance_hallid);
+
+    const hallDiv = document.createElement("div");
+    hallDiv.classList.add("movie-seances__hall");
+
+    const hallTitle = document.createElement("h3");
+    hallTitle.classList.add("movie-seances__hall-title");
+    hallTitle.textContent = hall.hall_name;
+
+    const seancesList = document.createElement("ul");
+    seancesList.classList.add("movie-seances__list");
+
+    const seanceTimeBlock = document.createElement("li");
+    seanceTimeBlock.classList.add("movie-seances__time-block");
+
+    const seanceTimeLink = document.createElement("a");
+    seanceTimeLink.classList.add("movie-seances__time");
+    seanceTimeLink.href = "hall.html";
+    seanceTimeLink.textContent = seance.seance_time;
+    seanceTimeLink.dataset.filmId = film.film_id;
+    seanceTimeLink.dataset.filmName = film.film_name;
+    seanceTimeLink.dataset.hallId = hall.hall_id;
+    seanceTimeLink.dataset.hallName = hall.hall_name;
+    seanceTimeLink.dataset.priceVip = hall.hall_price_vip;
+    seanceTimeLink.dataset.priceStandart = hall.hall_price_standart;
+    seanceTimeLink.dataset.seanceId = seance.seance_id;
+    seanceTimeLink.dataset.seanceTime = seance.seance_time;
+    seanceTimeLink.dataset.seanceStart = seance.seance_start;
+    seanceTimeLink.dataset.seanceTimeStamp = seance.seanceTimeStamp;
+
+// Получаем timestamp начала дня
+const chosenDayStart = new Date();
+chosenDayStart.setHours(0, 0, 0, 0);
+const chosenDayStartTimeStamp = chosenDayStart.getTime();
+
+const seanceTimestamp = new Date(seance.seanceTimeStamp).getTime();
+const currentTime = Date.now();
+const dayTimeStamp = chosenDayStartTimeStamp; // Здесь подставьте значение начала дня
+
+if (seanceTimestamp > currentTime && dayTimeStamp >= currentTime) {
+  seanceTimeLink.classList.add("future-seance");
+  seanceTimeLink.href = "hall.html";
+} else {
+  seanceTimeLink.classList.add("past-seance");
+  seanceTimeLink.style.pointerEvents = "none";
+  seanceTimeLink.style.backgroundColor = "gray";
+}
+
+    seanceTimeBlock.appendChild(seanceTimeLink);
+    seancesList.appendChild(seanceTimeBlock);
+
+    hallDiv.appendChild(hallTitle);
+    hallDiv.appendChild(seancesList);
+
+    hallsContainer.appendChild(hallDiv);
+
+    // Добавляем обработчик события на клик по ссылке сеанса
+seanceTimeLink.addEventListener("click", () => {
+  const selectedSeance = {
+    seance_id: seance.seance_id,
+    film_id: film.film_id,
+    hall_id: hall.hall_id,
+    film_name: film.film_name,
+    hall_name: hall.hall_name,
+    price_vip: hall.hall_price_vip,
+    price_standard: hall.hall_price_standart,
+    seance_time: seance.seance_time,
+    seance_start: seance.seance_start,
+    seance_time_stamp: seance.seanceTimeStamp
+  };
+  sessionStorage.setItem("selectedSeance", JSON.stringify(selectedSeance));
+});
   });
 
-  // Обновление списка фильмов и сеансов
-  const movieSections = document.querySelectorAll(".movie");
-  movieSections.forEach((movieSection, index) => {
-    const film = films[index];
-    const seanceData = seances.filter(
-      (seance) => seance.seance_filmid === film.film_id
-    );
+  movieSection.appendChild(hallsContainer);
 
-    const movieInfo = movieSection.querySelector(".movie__info");
-    const movieTitle = movieInfo.querySelector(".movie__title");
-    const movieSynopsis = movieInfo.querySelector(".movie__synopsis");
-    const movieDuration = movieInfo.querySelector(".movie__data-duration");
-    const movieOrigin = movieInfo.querySelector(".movie__data-origin");
-    const moviePoster = movieInfo.querySelector(".movie__poster-image");
-    const seanceList = movieSection.querySelectorAll(".movie-seances__time");
+  return movieSection;
+}
 
-    movieTitle.textContent = film.film_name;
-    movieSynopsis.textContent = film.film_description;
-    movieDuration.textContent = `${film.film_duration} минут`;
-    movieOrigin.textContent = film.film_origin;
-    moviePoster.src = film.film_poster;
 
-    const currentTime = new Date().getHours() * 60 + new Date().getMinutes();
-    const upcomingSeances = seanceData.filter(seance => seance.seance_start >= currentTime);
-    const upcomingSeanceTimes = upcomingSeances.map(seance => seance.seance_time);
 
-    // Обработчик клика на ссылку сеанса
-    seanceList.forEach((seanceElement, index) => {
-      const session = upcomingSeances[index];
-      if (session) {
-        seanceElement.textContent = session.seance_time;
+function fillPageWithData(data) {
+  const box = document.querySelector('#template-box');
+  const films = data.films.result;
+  const seances = data.seances.result;
+  const halls = data.halls.result;
 
-        if (session.isPast) {
-          // Если сеанс уже прошел, блокируем ссылку
-          seanceElement.href = "#";
-          seanceElement.style.backgroundColor = '#f2f2f2'; // Светло-серый фон
-        } else {
-          // Устанавливаем data-атрибуты для сеанса
-          seanceElement.dataset.seanceId = session.seance_id;
-          seanceElement.dataset.hallId = session.hall_id;
-
-          seanceElement.addEventListener("click", () => {
-            // Сохраняем данные о сеансе в sessionStorage
-            const sessionData = {
-              seanceId: session.seance_id,
-              hallId: session.hall_id,
-            };
-            sessionStorage.setItem("selectedSession", JSON.stringify(sessionData));
-          });
-
-          seanceElement.href = `hall.html`; // Переход на страницу зала
-        }
-      } else {
-        seanceElement.style.display = "none";
-      }
-    });
+  films.forEach((film, index) => {
+    const seanceData = seances.filter(seance => seance.seance_filmid === film.film_id);
+    const movieSection = createMovieSection(film, seanceData, halls);
+    box.appendChild(movieSection);
   });
 }
 
-// Параметры для запроса
 const requestData = "event=update";
-
-// URL для запроса
 const apiUrl = "https://jscp-diplom.netoserver.ru/";
-
-// Вызов функции отправки запроса и заполнения страницы данными
 fetchData(apiUrl, requestData, fillPageWithData);
+
+
+
