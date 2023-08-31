@@ -27,12 +27,14 @@ dateLinks.forEach((dateLink, index) => {
     dateLink.classList.add("page-nav__day_today");
   }
 
+// Выделение красным выходные 
   if (dayOfWeek === "Сб" || dayOfWeek === "Вс") {
     dateLink.classList.add("page-nav__day_weekend");
   } else {
     dateLink.classList.remove("page-nav__day_weekend");
   }
 
+// Переключение дней 
   dateLink.addEventListener("click", () => {
     // Удаляем класс у всех элементов
     dateLinks.forEach(link => {
@@ -44,6 +46,20 @@ dateLinks.forEach((dateLink, index) => {
   });
 });
 // ____________________________________________
+function fillPageWithData(data) {
+  console.log(data);
+  const box = document.querySelector('#template-box');
+  const films = data.films.result;
+  const seances = data.seances.result;
+  const halls = data.halls.result;
+
+  films.forEach((film) => {
+    const seanceData = seances.filter(seance => seance.seance_filmid === film.film_id);
+    const movieSection = createMovieSection(film, seanceData, halls);
+    box.appendChild(movieSection);
+  });
+}
+
 function createMovieSection(film, seanceData, halls) {
   const movieSection = document.createElement("section");
   movieSection.classList.add("movie");
@@ -132,19 +148,18 @@ function createMovieSection(film, seanceData, halls) {
 // Получаем timestamp начала дня
 const chosenDayStart = new Date();
 chosenDayStart.setHours(0, 0, 0, 0);
-const chosenDayStartTimeStamp = chosenDayStart.getTime();
-
-const seanceTimestamp = new Date(seance.seanceTimeStamp).getTime();
+// парсим время сеанса
+const timeParts = seance.seance_time.split(":");
+const hours = parseInt(timeParts[0], 10);
+const minutes = parseInt(timeParts[1], 10);
+const seanceStartTimeInMinutes = hours * 60 + minutes;
+const seanceTimestamp = chosenDayStart.getTime() + seanceStartTimeInMinutes * 60 * 1000;
 const currentTime = Date.now();
-const dayTimeStamp = chosenDayStartTimeStamp; // Здесь подставьте значение начала дня
 
-if (seanceTimestamp > currentTime && dayTimeStamp >= currentTime) {
-  seanceTimeLink.classList.add("future-seance");
+if (seanceTimestamp > currentTime) {
   seanceTimeLink.href = "hall.html";
 } else {
-  seanceTimeLink.classList.add("past-seance");
-  seanceTimeLink.style.pointerEvents = "none";
-  seanceTimeLink.style.backgroundColor = "gray";
+  seanceTimeLink.classList.add("acceptin-button-disabled");
 }
 
     seanceTimeBlock.appendChild(seanceTimeLink);
@@ -169,6 +184,7 @@ seanceTimeLink.addEventListener("click", () => {
     seance_start: seance.seance_start,
     seance_time_stamp: seance.seanceTimeStamp
   };
+
   sessionStorage.setItem("selectedSeance", JSON.stringify(selectedSeance));
 });
   });
@@ -179,23 +195,6 @@ seanceTimeLink.addEventListener("click", () => {
 }
 
 
-
-function fillPageWithData(data) {
-  const box = document.querySelector('#template-box');
-  const films = data.films.result;
-  const seances = data.seances.result;
-  const halls = data.halls.result;
-
-  films.forEach((film, index) => {
-    const seanceData = seances.filter(seance => seance.seance_filmid === film.film_id);
-    const movieSection = createMovieSection(film, seanceData, halls);
-    box.appendChild(movieSection);
-  });
-}
-
 const requestData = "event=update";
 const apiUrl = "https://jscp-diplom.netoserver.ru/";
 fetchData(apiUrl, requestData, fillPageWithData);
-
-
-
