@@ -434,29 +434,14 @@ body {
 /*================================================================*/
 
 .movie .movie-seances__hall .acceptin-button-disabled {
- background-color: #888888;
- pointer-events: none
-}
-
-.acceptin-button:disabled {
   background-color: #888888;
   pointer-events: none
- }
-
- .hidden {
-  display: none;
 }
+
 
 @media (min-width: 200px) and (max-width: 999px) {
   .movie .movie__info {
   flex-direction: column;
   align-items: center;
   }
-}
-
-.movie-seances__time .past-seance {
-  color: #999; /* Цвет текста для неактивного сеанса */
-  font-weight: normal; /* Неактивный сеанс может быть менее выделенным */
-  background-color: gray; /* Фон для неактивного сеанса */
-  cursor: default; /* Изменение курсора для неактивного сеанса */
 }
