@@ -111,8 +111,6 @@ body {
 .movie .movie__poster .movie__poster-image {
   position: relative;
   top: -3rem;
-  width: 12.5rem;
-  height: 17.5rem;
 }
 .movie .movie__poster::after {
   content: '';
@@ -439,9 +437,22 @@ body {
 }
 
 
-@media (min-width: 200px) and (max-width: 999px) {
+@media screen and (min-width: 200px) and (max-width: 999px) {
   .movie .movie__info {
   flex-direction: column;
   align-items: center;
   }
+  .movie .movie__poster .movie__poster-image {
+    height: auto;
+    width: 100%;
+}
+}
+
+
+
+@media screen and (min-width: 1000px) {
+  .movie .movie__poster .movie__poster-image {
+    width: 12.5rem;
+    height: 17.5rem;
+}
 }
